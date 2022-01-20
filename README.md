@@ -59,6 +59,18 @@ Clonse this repo: You can start by using this guide: [Coveo101Commerce](https://
 ## Make changes
 Create your API keys and put them in `next.config.js`. Make sure that all fields are also listed in this file.
 
+## Styling
+In `public\fashionStyles.css` you can change the styling. For example: smaller images:
+```css
+body .card-product .card__media {
+  cursor: pointer;
+  height: 250px;
+  background-size: 250px;
+  margin: 0px;
+}
+```
+
+
 ## Test locally
 Now test locally using:
 ```cmd
