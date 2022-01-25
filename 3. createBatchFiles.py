@@ -38,6 +38,97 @@ def loadSettings(settingfile):
     settings = json.loads(text)
   return settings
 
+
+def splitUnits(meta):
+    regex = r'(\d[\d.,\/]*) ?(["”\w]+)'
+    matches = re.finditer(regex, meta, re.MULTILINE)
+    searchableKeywords = []
+
+    for matchNum, match in enumerate(matches, start=1):
+      my_value = match.group(1)
+      my_units = match.group(2)
+      searchableKeywords.append(my_value+' '+my_units)
+      searchableKeywords.append(my_value+''+my_units)
+      #print (my_value)
+      #print (my_units)
+      for unit in units:
+        if unit['from']==my_units:
+          try:
+            my_new_value = float(my_value)*unit['number']
+            if (unit['decimals']==0):
+              my_new = int(my_new_value)
+            else:
+              my_new = round(my_new_value,unit['decimals'])
+            searchableKeywords.append(str(my_new)+' '+unit['to'])
+            searchableKeywords.append(str(my_new)+''+unit['to'])
+          except:
+            pass
+    return ';'.join(searchableKeywords)
+
+ 
+units=[]
+
+def UnitConversion(s_to, s_from, number, decimals):
+   units.append({'from':s_from, 'to':s_to,'number':number,'decimals':decimals})
+
+
+UnitConversion('hl', 'l', 1/100,0)
+UnitConversion('l', 'hl', 100,0)
+UnitConversion('km', 'm', 1/1000,3)
+UnitConversion('cm', 'm', 100,0)
+UnitConversion('mm', 'm', 1000,0)
+UnitConversion('cm', 'mtr', 100,0)
+UnitConversion('mm', 'mtr', 1000,0)
+UnitConversion('m', 'km', 1000,0)
+UnitConversion('m', 'cm', 1/100,3)
+UnitConversion('m', 'mm', 1/1000,4)
+UnitConversion('m', 'mi', 1609.344,0)
+UnitConversion('m', 'mile', 1609.344,0)
+UnitConversion('m', 'miles', 1609.344,0)
+UnitConversion('m', 'feet', 0.3048,1)
+UnitConversion('m', 'ft', 0.3048,1)
+UnitConversion('m', 'in', 0.0254,1)
+UnitConversion('m', 'inch', 0.0254,2)
+UnitConversion('m', 'inches', 0.0254,2)
+UnitConversion('mm', 'in', 25.4,1)
+UnitConversion('mm', 'inch', 25.4,1)
+UnitConversion('mm', 'inches', 25.4,1)
+UnitConversion('in', 'mm', 0.0393701,1)
+UnitConversion('inch', 'mm',  0.0393701,1)
+UnitConversion('"', 'mm',  0.0393701,1)
+UnitConversion('”', 'mm',  0.0393701,1)
+UnitConversion('mm', '"', 25.4,1)
+UnitConversion('mm', '"', 25.4,1)
+UnitConversion('mm', '"', 25.4,1)
+UnitConversion('mm', '”', 25.4,1)
+UnitConversion('mm', '”', 25.4,1)
+UnitConversion('mm', '”', 25.4,1)
+UnitConversion( 'mi','m', 0.000621371,4)
+UnitConversion( 'mile','m', 0.000621371,4)
+UnitConversion( 'miles','m', 0.000621371,4)
+UnitConversion( 'feet','m', 3.28084,0)
+UnitConversion( 'ft','m', 3.28084,0)
+UnitConversion( 'inch','m', 39.3701,0)
+UnitConversion( 'inches','m', 39.3701,0)
+
+UnitConversion( 'inch','ft', 12,0)
+UnitConversion( 'inches','ft', 12,0)
+UnitConversion( 'inch','feet', 12,0)
+UnitConversion( 'inches','feet', 12,0)
+
+UnitConversion( 'ft',  'inch', 0.0833333,2)
+UnitConversion( 'ft','inches', 0.0833333,2)
+UnitConversion( 'feet','inch', 0.0833333,2)
+UnitConversion( 'feet','inches', 0.0833333,2)
+
+
+UnitConversion('g', 'lbs', 453.59237,0)
+UnitConversion('g', 'lb', 453.59237,0)
+UnitConversion('g', 'oz', 28.34952,0)
+UnitConversion('g', 'kg', 1000,0)
+UnitConversion('kg', 'g', 1/1000,3)
+
+
 def splitSKU(meta):
   try:
     keywords = meta.split()
@@ -80,7 +171,10 @@ def add_document(post,filename):
     global stores
     # Create new push document
     mydoc = CoveoDocument.Document(post['p_producturl'])
-    content = "<meta charset='UTF-16'><meta http-equiv='Content-Type' content='text/html; charset=UTF-16'>"+post['p_all_text']
+    alltext = post['p_all_text']
+    alltext += splitUnits(alltext)
+    alltext = '<html><body>'+alltext+"</body></html>"
+    content = "<meta charset='UTF-16'><meta http-equiv='Content-Type' content='text/html; charset=UTF-16'>"+alltext
     #print(content)
     mydoc.SetContentAndZLibCompress(content)
     mydoc.AddMetadata('documenttype','Product')
@@ -239,7 +333,7 @@ def parse(dir, offset, settingfile):
           #print (json.dumps(jsont,indent=3))
           #data['p_domain'] = jsont['props']['pageProps']['atlas']['region']
           all_text = ''#jsont['props']['pageProps']['articleResult']['data']['article']['descriptiveContent']['unique']['content']
-          p_all_text = '<html><body>'
+          p_all_text = ''
           for content in jsont:
             p_all_text += ' '+getKey(jsont, content)
             key ='p_'+content.replace(' ','_').lower() 
@@ -263,7 +357,7 @@ def parse(dir, offset, settingfile):
           data['p_cat'] = createCategoriesPaths(categories)
           data['p_cat_slug'] = createCategoriesSlug(categories)
           
-          p_all_text+=' '+split_sku+'</body></html'
+          p_all_text+=' '+split_sku+''
           #print (p_all_text)
           data['p_all_text']=p_all_text
           
