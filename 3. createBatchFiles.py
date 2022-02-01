@@ -189,6 +189,7 @@ def add_document(post,filename):
     mydoc.AddMetadata("ec_images", [post['p_image']])
     mydoc.AddMetadata("ec_image", post['p_image'])
     mydoc.AddMetadata("ec_price", post['p_price'])
+    mydoc.AddMetadata("ec_promo_price", post['p_price'])
     mydoc.AddMetadata("ec_in_stock",  post['p_in_stock'])
     mydoc.AddMetadata("ec_slug", post['p_mpn'])
 
